@@ -47,7 +47,13 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:60,1'])->group(function (
 // ── Admin Routes (admin role only) ─────────────
 Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(function () {
     // User Management - FIXED ✅
-    Route::apiResource('admin/users', AdminUserController::class);
+    Route::apiResource('admin/users', AdminUserController::class)->names([
+        'index' => 'admin.users.index',
+        'store' => 'admin.users.store',
+        'show' => 'admin.users.show',
+        'update' => 'admin.users.update',
+        'destroy' => 'admin.users.destroy',
+    ]);
     
     Route::post('admin/users/systemAccount', [AdminUserController::class, 'storeSystemAccount']); 
     Route::patch('admin/users/{user}/role', [AdminUserController::class, 'updateRole']);
@@ -56,7 +62,13 @@ Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(f
     Route::patch('admin/users/{user}/archive', [AdminUserController::class, 'archiveUser']);
     
     // Contract Management
-    Route::apiResource('admin/contracts', AdminContractController::class);
+    Route::apiResource('admin/contracts', AdminContractController::class)->names([
+    'index' => 'admin.contracts.index',
+    'store' => 'admin.contracts.store',
+    'show' => 'admin.contracts.show',
+    'update' => 'admin.contracts.update',
+    'destroy' => 'admin.contracts.destroy',
+]);
 
     // Walk-in Management
     Route::apiResource('admin/walkins', AdminWalkInInfoController::class);
@@ -84,14 +96,26 @@ Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(f
 // ── Cashier Routes (Cashier role only) ─────────────
 Route::middleware(['auth:sanctum', 'cashier', 'active', 'throttle:60,1'])->group(function () {
     // User Management - FIXED ✅
-    Route::apiResource('cashier/users', CashierUserController::class);
+    Route::apiResource('cashier/users', CashierUserController::class)->names([
+        'index' => 'cashier.users.index',
+        'store' => 'cashier.users.store',
+        'show' => 'cashier.users.show',
+        'update' => 'cashier.users.update',
+        'destroy' => 'cashier.users.destroy',
+    ]);
     
     Route::post('cashier/users/systemAccount', [CashierUserController::class, 'storeSystemAccount']); 
     Route::patch('cashier/users/{user}/approve', [CashierUserController::class, 'approveUser']);
     Route::patch('cashier/users/{user}/deactivate', [CashierUserController::class, 'deactivateUser']);
     
     // Contract Management
-    Route::apiResource('cashier/contracts', CashierContractController::class);
+    Route::apiResource('cashier/contracts', CashierContractController::class)->names([
+        'index' => 'cashier.contracts.index',
+        'store' => 'cashier.contracts.store',
+        'show' => 'cashier.contracts.show',
+        'update' => 'cashier.contracts.update',
+        'destroy' => 'cashier.contracts.destroy',
+    ]);
 
     // Walk-in Management
     Route::apiResource('cashier/walkins', CashierWalkInInfoController::class);
