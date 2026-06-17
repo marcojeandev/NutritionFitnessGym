@@ -39,10 +39,10 @@ class AuthController extends Controller
             ], 201);
             
         } catch (\Throwable $e) {
-            Log::error('Register failed: ' . $e->getMessage());
+            Log::error('Register failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Registration failed. Please try again.'
             ], 500);
         }
     }
@@ -82,7 +82,7 @@ class AuthController extends Controller
                 ],
             ], 200);
         } catch (\Throwable $e) {
-            Log::error('Login failed: ' . $e->getMessage());
+            Log::error('Login failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'Login failed. Please try again.',
@@ -128,7 +128,7 @@ class AuthController extends Controller
                 'message' => 'Password changed successfully.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('Password change failed: ' . $e->getMessage());
+            Log::error('Password change failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'Password change failed. Please try again.',

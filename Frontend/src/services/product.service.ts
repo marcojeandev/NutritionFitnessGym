@@ -70,7 +70,7 @@ export const productService = {
   // ==================== PRODUCT CRUD ====================
   
   async getAllProducts(): Promise<Product[]> {
-    const response = await api.get('admin/products');
+    const response = await api.get(`${getPrefix()}/products`);
     return response.data?.data || response.data || [];
   },
 

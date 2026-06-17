@@ -16,7 +16,7 @@ class MemberMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!auth('sanctum')->check() || !auth('sanctum')->user()->isMember()) {
-            abort(403, 'Admin access only.');
+            abort(403, 'Member access only.');
         }
         return $next($request);
     }

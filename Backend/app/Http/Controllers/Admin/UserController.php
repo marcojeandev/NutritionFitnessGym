@@ -262,7 +262,7 @@ class UserController extends Controller
             
             $validated = $request->validated();
             
-            $validated["or_number"] = 'OR-' . strtoupper(uniqid()) . rand(1000, 9999);
+            $validated["or_number"] = 'OR-' . strtoupper(Str::random(14));
             $validated["payment_status"] = 'paid';
             $validated["transaction_id"] = null;
             $validated["payment_amount"] = 150.00;
@@ -285,11 +285,11 @@ class UserController extends Controller
             ], 200);
             
         } catch (\Throwable $e) {
-            \Log::error('User approval failed: ' . $e->getMessage());
-            
+            \Log::error('User approval failed', ['error' => $e->getMessage()]);
+
             return response()->json([
                 'status' => 0,
-                'message' => $e->getMessage()
+                'message' => 'User approval failed. Please try again.'
             ], 500);
         }
     }

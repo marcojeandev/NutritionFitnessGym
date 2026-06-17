@@ -154,15 +154,25 @@ export default function AdminAttendance() {
     }
   };
 
+  const todayStr = new Date().toDateString();
+  const isToday = (dateStr?: string) => {
+    if (!dateStr) return false;
+    const parsed = new Date(dateStr.replace(' ', 'T'));
+    if (!isNaN(parsed.getTime())) return parsed.toDateString() === todayStr;
+    return new Date(dateStr).toDateString() === todayStr;
+  };
+
   const walkinLogs = walkinAttendances.map((att: any) => {
     const walkin = walkins.find((w: any) => w.id === att.walk_in_id);
     return {
       id: `w-${att.id}`,
       name: walkin ? `${walkin.firstname} ${walkin.lastname}` : 'Unknown Walk-in',
       type: 'Walk-in',
-      timeIn: new Date(att.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      timeOut: '-', 
-      status: 'In Gym'
+      timeIn: new Date(att.created_at || att.time_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timeOut: att.time_out ? new Date(att.time_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-', 
+      status: att.time_out ? 'Left' : 'In Gym',
+      rawDate: att.created_at || att.time_in,
+      isTimeOut: !!att.time_out
     };
   });
 
@@ -173,12 +183,21 @@ export default function AdminAttendance() {
       name: userName,
       type: 'Member',
       timeIn: new Date(att.created_at || att.time_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      timeOut: att.time_out || '-',
-      status: 'In Gym'
+      timeOut: att.time_out ? new Date(att.time_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+      status: att.time_out ? 'Left' : 'In Gym',
+      rawDate: att.created_at || att.time_in,
+      isTimeOut: !!att.time_out
     };
   });
 
-  const attendanceLogs = [...memberLogs, ...walkinLogs];
+  const attendanceLogs = [...memberLogs, ...walkinLogs].sort((a, b) => new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime());
+  
+  // Stats calculations
+  const todayLogs = attendanceLogs.filter(log => isToday(log.rawDate));
+  const currentlyInGym = todayLogs.filter(log => !log.isTimeOut).length;
+  const totalCheckinsToday = todayLogs.length;
+  const membersToday = todayLogs.filter(log => log.type === 'Member').length;
+  const walkinsToday = todayLogs.filter(log => log.type === 'Walk-in').length;
 
   return (
     <AdminLayout>
@@ -208,7 +227,7 @@ export default function AdminAttendance() {
               </div>
               <div className="mt-4">
                 <p className="text-sm text-muted-foreground">Currently In Gym</p>
-                <h3 className="text-3xl font-bold mt-1">42</h3>
+                <h3 className="text-3xl font-bold mt-1">{currentlyInGym}</h3>
               </div>
             </CardContent>
           </Card>
@@ -216,27 +235,27 @@ export default function AdminAttendance() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
-                  <Clock className="size-6" />
+                  <ClipboardCheck className="size-6" />
                 </div>
                 <span className="text-xs text-muted-foreground">Today</span>
               </div>
               <div className="mt-4">
-                <p className="text-sm text-muted-foreground">Average Duration</p>
-                <h3 className="text-3xl font-bold mt-1">1h 45m</h3>
+                <p className="text-sm text-muted-foreground">Total Check-ins</p>
+                <h3 className="text-3xl font-bold mt-1">{totalCheckinsToday}</h3>
               </div>
             </CardContent>
           </Card>
           <Card className="glass border-white/5">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500">
+                <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-500">
                   <UserMinus className="size-6" />
                 </div>
-                <span className="text-xs text-muted-foreground">Peak Time</span>
+                <span className="text-xs text-muted-foreground">Distribution</span>
               </div>
               <div className="mt-4">
-                <p className="text-sm text-muted-foreground">Busiest Hour</p>
-                <h3 className="text-3xl font-bold mt-1">5:00 PM</h3>
+                <p className="text-sm text-muted-foreground">Members vs Walk-ins</p>
+                <h3 className="text-3xl font-bold mt-1">{membersToday} <span className="text-muted-foreground text-xl font-normal">/</span> {walkinsToday}</h3>
               </div>
             </CardContent>
           </Card>

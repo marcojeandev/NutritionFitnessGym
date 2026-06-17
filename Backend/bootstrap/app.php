@@ -19,13 +19,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'cashier' => \App\Http\Middleware\CashierMiddleware::class,
             'staff' => \App\Http\Middleware\StaffMiddleware::class,
             'Member' => \App\Http\Middleware\MemberMiddleware::class,
-        ]);
-        
-    })
-    ->withMiddleware(function (Middleware $middleware) {
-        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
-
-        $middleware->alias([
             'active' => \App\Http\Middleware\CheckActiveStatusMiddleware::class,
         ]);
     })

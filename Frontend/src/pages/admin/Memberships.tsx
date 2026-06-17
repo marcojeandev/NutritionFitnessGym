@@ -593,6 +593,8 @@ export default function AdminMemberships() {
                       else if (diffMonths === 12) contractTypeDisplay = '1 Year';
                       else contractTypeDisplay = `${diffMonths} Months`;
                     }
+
+                    const displayStatus = contract?.status || (record.status === 'pending' ? 'pending' : 'no contract');
                     
                     return (
                     <TableRow key={user.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
@@ -648,11 +650,12 @@ export default function AdminMemberships() {
                       <TableCell>
                         <Badge variant="outline" className={cn(
                           "h-6 text-[10px] uppercase",
-                          record.status === 'active' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : 
-                          record.status === 'pending' ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : 
-                          "bg-red-500/10 text-red-500 border-red-500/20"
+                          displayStatus === 'active' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : 
+                          displayStatus === 'expired' ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                          displayStatus === 'pending' ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                          "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
                         )}>
-                          {record.status}
+                          {displayStatus}
                         </Badge>
                       </TableCell>
                       <TableCell className={cn(
@@ -714,7 +717,11 @@ export default function AdminMemberships() {
                                     </div>
                                     <div className="p-3 bg-white/5 rounded-xl border border-white/10">
                                       <p className="text-xs text-muted-foreground">Status</p>
-                                      <p className={cn("font-medium uppercase", record.status === 'active' ? "text-emerald-500" : "text-amber-500")}>{record.status}</p>
+                                      <p className={cn("font-medium uppercase", 
+                                        displayStatus === 'active' ? "text-emerald-500" : 
+                                        displayStatus === 'expired' ? "text-red-500" :
+                                        displayStatus === 'pending' ? "text-amber-500" : "text-zinc-400"
+                                      )}>{displayStatus}</p>
                                     </div>
                                     <div className="p-3 bg-white/5 rounded-xl border border-white/10 col-span-2">
                                       <p className="text-xs text-muted-foreground">Joined Date</p>

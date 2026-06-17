@@ -39,46 +39,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '@/services/user.service';
 import { attendanceService } from '@/services/attendance.service';
 import { contractService } from '@/services/contract.service';
+import { walkinService } from '@/services/walkin.service';
+import { productService } from '@/services/product.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 
-const revenueData = [
-  { name: 'Mon', revenue: 4000 },
-  { name: 'Tue', revenue: 3000 },
-  { name: 'Wed', revenue: 2000 },
-  { name: 'Thu', revenue: 2780 },
-  { name: 'Fri', revenue: 1890 },
-  { name: 'Sat', revenue: 2390 },
-  { name: 'Sun', revenue: 3490 },
-];
-
-const attendanceData = [
-  { name: 'Mon', count: 240 },
-  { name: 'Tue', count: 198 },
-  { name: 'Wed', count: 300 },
-  { name: 'Thu', count: 208 },
-  { name: 'Fri', count: 480 },
-  { name: 'Sat', count: 380 },
-  { name: 'Sun', count: 430 },
-];
-
-const growthData = [
-  { month: 'Jan', members: 1000 },
-  { month: 'Feb', members: 1050 },
-  { month: 'Mar', members: 1120 },
-  { month: 'Apr', members: 1250 },
-  { month: 'May', members: 1284 },
-];
-
-const stats = [
-  { label: 'Total Members', value: '1,284', trend: '+12.5%', up: true, icon: Users, color: 'text-blue-500' },
-  { label: 'Active Memberships', value: '1,150', trend: '+5.2%', up: true, icon: UserCheck, color: 'text-emerald-500' },
-  { label: 'Expired Memberships', value: '134', trend: '-2.1%', up: true, icon: UserMinus, color: 'text-red-500' },
-  { label: 'Monthly Revenue', value: '₱42,500', trend: '+8.2%', up: true, icon: CreditCard, color: 'text-emerald-500' },
-  { label: 'Walk-ins Today', value: '28', trend: '+14.5%', up: true, icon: Footprints, color: 'text-orange-500' },
-  { label: 'Product Sales', value: '₱5,200', trend: '+3.4%', up: true, icon: ShoppingBag, color: 'text-purple-500' },
-  { label: 'Attendance Today', value: '342', trend: '+12.1%', up: true, icon: ClipboardCheck, color: 'text-blue-400' },
-  { label: 'Renewals (This Month)', value: '89', trend: '+2.4%', up: true, icon: RefreshCw, color: 'text-emerald-400' },
+const statsTemplate = [
+  { label: 'Total Members', key: 'membersCount', trend: '+12.5%', up: true, icon: Users, color: 'text-blue-500', prefix: '' },
+  { label: 'Active Memberships', key: 'activeMemberships', trend: '+5.2%', up: true, icon: UserCheck, color: 'text-emerald-500', prefix: '' },
+  { label: 'Expired Memberships', key: 'expiredMemberships', trend: '-2.1%', up: true, icon: UserMinus, color: 'text-red-500', prefix: '' },
+  { label: 'Monthly Revenue', key: 'monthlyRevenue', trend: '+8.2%', up: true, icon: CreditCard, color: 'text-emerald-500', prefix: '₱' },
+  { label: 'Walk-ins Today', key: 'walkinsToday', trend: '+14.5%', up: true, icon: Footprints, color: 'text-orange-500', prefix: '' },
+  { label: 'Product Sales', key: 'productSales', trend: '+3.4%', up: true, icon: ShoppingBag, color: 'text-purple-500', prefix: '₱' },
+  { label: 'Attendance Today', key: 'attendanceToday', trend: '+12.1%', up: true, icon: ClipboardCheck, color: 'text-blue-400', prefix: '' },
+  { label: 'Renewals (This Month)', key: 'renewalsThisMonth', trend: '+2.4%', up: true, icon: RefreshCw, color: 'text-emerald-400', prefix: '' },
 ];
 
 export default function AdminOverview() {
@@ -99,6 +73,93 @@ export default function AdminOverview() {
     queryKey: ['member-attendance'],
     queryFn: () => attendanceService.getAllAttendance()
   });
+
+  const { data: paychecks = [] } = useQuery({
+    queryKey: ['paychecks'],
+    queryFn: () => productService.getPaychecks()
+  });
+
+  const { data: walkinAttendances = [] } = useQuery({
+    queryKey: ['walkin-attendance'],
+    queryFn: () => walkinService.getWalkinAttendance()
+  });
+
+  // Derived Statistics
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const todayStr = now.toDateString();
+
+  const membersCount = users.filter((u: any) => u.role === 'member').length || users.length;
+  const activeMemberships = contracts.filter((c: any) => c.status === 'active').length;
+  const expiredMemberships = contracts.filter((c: any) => c.status === 'expired').length;
+  
+  const isToday = (dateStr?: string) => {
+    if (!dateStr) return false;
+    // Handle "YYYY-MM-DD HH:mm:ss" format safely
+    const parsed = new Date(dateStr.replace(' ', 'T'));
+    if (!isNaN(parsed.getTime())) return parsed.toDateString() === todayStr;
+    return new Date(dateStr).toDateString() === todayStr;
+  };
+
+  const attendanceToday = memberAttendances.filter((a: any) => isToday(a.date) || isToday(a.created_at) || isToday(a.time_in)).length;
+  const walkinsToday = walkinAttendances.filter((w: any) => isToday(w.date) || isToday(w.created_at) || isToday(w.time_in)).length;
+  
+  const productSales = paychecks.reduce((sum: number, p: any) => {
+    const total = p.total_price || (p.items || []).reduce((s: number, i: any) => s + (i.price_at_sale * i.quantity), 0);
+    return sum + Number(total);
+  }, 0);
+
+  const renewalsThisMonth = contracts.filter((c: any) => {
+    const d = new Date(c.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  }).length;
+
+  const contractRevenueThisMonth = contracts.reduce((sum: number, c: any) => {
+    if (c.payment?.payment_amount) {
+      const d = new Date(c.payment.created_at || c.created_at);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        return sum + Number(c.payment.payment_amount);
+      }
+    }
+    return sum;
+  }, 0);
+
+  const walkinRevenueThisMonth = walkinAttendances.reduce((sum: number, w: any) => {
+    const d = new Date(w.created_at || w.time_in);
+    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      return sum + Number(w.fee_paid || 0);
+    }
+    return sum;
+  }, 0);
+
+  const productRevenueThisMonth = paychecks.reduce((sum: number, p: any) => {
+    const d = new Date(p.created_at);
+    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      const total = p.total_price || (p.items || []).reduce((s: number, i: any) => s + (i.price_at_sale * i.quantity), 0);
+      return sum + Number(total);
+    }
+    return sum;
+  }, 0);
+
+  const monthlyRevenue = contractRevenueThisMonth + walkinRevenueThisMonth + productRevenueThisMonth;
+
+  const computedStats = {
+    membersCount: membersCount.toLocaleString(),
+    activeMemberships: activeMemberships.toLocaleString(),
+    expiredMemberships: expiredMemberships.toLocaleString(),
+    monthlyRevenue: monthlyRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    walkinsToday: walkinsToday.toLocaleString(),
+    productSales: productSales.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    attendanceToday: attendanceToday.toLocaleString(),
+    renewalsThisMonth: renewalsThisMonth.toLocaleString(),
+  };
+
+  // Mocking charts data for now using dynamic trends could be implemented if there is daily historical aggregation
+  // For now using static empty/mock trends until daily endpoints exist
+  const revenueData = [{ name: 'Today', revenue: monthlyRevenue }];
+  const attendanceData = [{ name: 'Today', count: attendanceToday }];
+  const growthData = [{ month: 'Current', members: membersCount }];
 
   const recordAttendanceMutation = useMutation({
     mutationFn: (data: any) => attendanceService.recordAttendance(data),
@@ -194,9 +255,10 @@ export default function AdminOverview() {
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {stats.map((stat, i) => (
+          {statsTemplate.map((stat, i) => {
+            const val = computedStats[stat.key as keyof typeof computedStats] || '0';
+            return (
             <Card key={i} className="glass border-white/5 overflow-hidden group hover:border-white/10 transition-all">
               <CardContent className="p-5 md:p-6">
                 <div className="flex items-center justify-between">
@@ -207,23 +269,19 @@ export default function AdminOverview() {
                     "flex items-center gap-1 text-xs font-medium",
                     stat.up ? "text-emerald-500" : "text-destructive"
                   )}>
-                    {stat.trend}
-                    {stat.up ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
                   </div>
                 </div>
                 <div className="mt-4">
                   <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
-                  <h3 className="text-xl md:text-2xl font-bold mt-1">{stat.value}</h3>
+                  <h3 className="text-xl md:text-2xl font-bold mt-1">{stat.prefix}{val}</h3>
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )})}
         </div>
 
-        {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           
-          {/* Revenue Analytics */}
           <Card className="glass border-white/5">
             <CardHeader>
               <CardTitle className="text-lg">Revenue Analytics</CardTitle>
