@@ -84,8 +84,15 @@ Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(f
 
 // ── Cashier Routes (Cashier role only) ─────────────
 Route::middleware(['auth:sanctum', 'cashier', 'active', 'throttle:60,1'])->group(function () {
-    // User Management
-    Route::apiResource('cashier/users', CashierUserController::class);
+    // User Management - FIXED DUPLICATE NAMES ✅
+    Route::apiResource('cashier/users', CashierUserController::class)->names([
+        'index' => 'cashier.users.index',
+        'store' => 'cashier.users.store',
+        'show' => 'cashier.users.show',
+        'update' => 'cashier.users.update',
+        'destroy' => 'cashier.users.destroy',
+    ]);
+    
     Route::post('cashier/users/systemAccount', [CashierUserController::class, 'storeSystemAccount']); 
     Route::patch('cashier/users/{user}/approve', [CashierUserController::class, 'approveUser']);
     Route::patch('cashier/users/{user}/deactivate', [CashierUserController::class, 'deactivateUser']);
