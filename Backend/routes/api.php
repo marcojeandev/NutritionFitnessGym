@@ -47,13 +47,7 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:60,1'])->group(function (
 // ── Admin Routes (admin role only) ─────────────
 Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(function () {
     // User Management - FIXED ✅
-    Route::apiResource('admin/users', AdminUserController::class)->names([
-        'index' => 'admin.users.index',
-        'store' => 'admin.users.store',
-        'show' => 'admin.users.show',
-        'update' => 'admin.users.update',
-        'destroy' => 'admin.users.destroy',
-    ]);
+    Route::apiResource('admin/users', AdminUserController::class);
     
     Route::post('admin/users/systemAccount', [AdminUserController::class, 'storeSystemAccount']); 
     Route::patch('admin/users/{user}/role', [AdminUserController::class, 'updateRole']);
@@ -90,13 +84,7 @@ Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(f
 // ── Cashier Routes (Cashier role only) ─────────────
 Route::middleware(['auth:sanctum', 'cashier', 'active', 'throttle:60,1'])->group(function () {
     // User Management - FIXED ✅
-    Route::apiResource('cashier/users', CashierUserController::class)->names([
-        'index' => 'cashier.users.index',
-        'store' => 'cashier.users.store',
-        'show' => 'cashier.users.show',
-        'update' => 'cashier.users.update',
-        'destroy' => 'cashier.users.destroy',
-    ]);
+    Route::apiResource('cashier/users', CashierUserController::class);
     
     Route::post('cashier/users/systemAccount', [CashierUserController::class, 'storeSystemAccount']); 
     Route::patch('cashier/users/{user}/approve', [CashierUserController::class, 'approveUser']);
