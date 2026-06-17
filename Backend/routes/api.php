@@ -46,8 +46,15 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:60,1'])->group(function (
 
 // ── Admin Routes (admin role only) ─────────────
 Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(function () {
-    // User Management
-    Route::apiResource('admin/users', AdminUserController::class);
+    // User Management - FIXED ✅
+    Route::apiResource('admin/users', AdminUserController::class)->names([
+        'index' => 'admin.users.index',
+        'store' => 'admin.users.store',
+        'show' => 'admin.users.show',
+        'update' => 'admin.users.update',
+        'destroy' => 'admin.users.destroy',
+    ]);
+    
     Route::post('admin/users/systemAccount', [AdminUserController::class, 'storeSystemAccount']); 
     Route::patch('admin/users/{user}/role', [AdminUserController::class, 'updateRole']);
     Route::patch('admin/users/{user}/approve', [AdminUserController::class, 'approveUser']);
@@ -59,8 +66,6 @@ Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(f
 
     // Walk-in Management
     Route::apiResource('admin/walkins', AdminWalkInInfoController::class);
-
-    // Walk-in Management 
     Route::apiResource('admin/walkins-attendance', AdminWalkInAttendanceController::class);
 
     // Products Management 
@@ -75,16 +80,16 @@ Route::middleware(['auth:sanctum', 'admin', 'active', 'throttle:60,1'])->group(f
     // Trainer Management 
     Route::apiResource('admin/trainers', AdminTrainerController::class);
 
-    // Trainer Management 
-    Route::apiResource('admin/attendance',  AdminAttendanceController::class);
+    // Attendance Management 
+    Route::apiResource('admin/attendance', AdminAttendanceController::class);
 
-    // Trainer Management 
-    Route::apiResource('admin/reservations',  AdminReservationController::class);
+    // Reservation Management 
+    Route::apiResource('admin/reservations', AdminReservationController::class);
 });
 
 // ── Cashier Routes (Cashier role only) ─────────────
 Route::middleware(['auth:sanctum', 'cashier', 'active', 'throttle:60,1'])->group(function () {
-    // User Management - FIXED DUPLICATE NAMES ✅
+    // User Management - FIXED ✅
     Route::apiResource('cashier/users', CashierUserController::class)->names([
         'index' => 'cashier.users.index',
         'store' => 'cashier.users.store',
@@ -102,16 +107,8 @@ Route::middleware(['auth:sanctum', 'cashier', 'active', 'throttle:60,1'])->group
 
     // Walk-in Management
     Route::apiResource('cashier/walkins', CashierWalkInInfoController::class);
-
-    // Walk-in Management 
     Route::apiResource('cashier/walkins-attendance', CashierWalkInAttendanceController::class);
-
-    // Products Management 
-    // Route::apiResource('cashier/products', CashierProductController::class);
 
     // Products paycheck Management 
     Route::apiResource('cashier/products-paycheck', CashierProductPaycheckController::class);
-
-    // Reports Management 
-    // Route::apiResource('cashier/reports', CashierReportController::class);
 });
